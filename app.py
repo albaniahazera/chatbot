@@ -16,14 +16,16 @@ def chatBot():
     data = request.json
     message = data.get('message', '')
 
-    if adminKey in message:
-        response = "halo albania hazera, senang bertemu denganmu"
-    elif "halo" or "hai" in message.lower():
-        response = "Halo, apa yang bisa saya bantu ?"
-    elif "siapa kamu ?" or "kamu ini apa ?" in message.lower():
-        response = "saya C-Bot, dibuat oleh albania hazera dan hanya bisa diakses secara lokal."
+    if "halo" in message.lower():
+        response = "Halo, apa yang bisa saya bantu?", "1. Mengembalikan pesan", "2. Siapa kamu ?", '''PILIH 1-2'''
+    elif "1" in message:
+        response = f"Pesan kamu: [{message}]"
+    elif "2" in message:
+        response = "saya C-Bot, dibuat oleh albania hazera dan hanya bisa diakses dijaringan lokal."
     elif "tes" in message.lower():
         response = "ya ini test"
+    elif adminKey in message:
+        response = "halo albania hazera, senang bertemu denganmu"
     else: 
         response = "maaf saya tidak tahu"
 
