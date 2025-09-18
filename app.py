@@ -1,36 +1,66 @@
-import os
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import make_pipeline
 from flask import Flask, request, jsonify
-from dotenv import load_dotenv
 
-load_dotenv()
-runningONPORT = os.getenv("PORT")
-adminKey = os.getenv("KEY_CREATOR")
+# Data pelatihan: pasangan (kalimat, niat)
+training_data = [
+    ("halo", "salam"),
+    ("hai", "salam"),
+    ("hello", "salam"),
+    ("siapa namamu", "identitas"),
+    ("namamu siapa", "identitas"),
+    ("apa yang bisa kamu lakukan", "kemampuan"),
+    ("kamu bisa apa", "kemampuan"),
+    ("berapa umurmu", "umur"),
+    ("umurmu berapa", "umur")
+]
+
+# Memisahkan kalimat (X) dan niat (y)
+sentences = [data[0] for data in training_data]
+intents = [data[1] for data in training_data]
+
+# Membuat pipeline yang menggabungkan vektorisasi teks dan klasifikasi
+model = make_pipeline(TfidfVectorizer(), MultinomialNB())
+
+# Melatih model dengan data pelatihan
+model.fit(sentences, intents)
+
+def predict_intent(text):
+    return model.predict([text])[0]
+
+def get_response(intent):
+    if intent == "salam":
+        return "Halo! Ada yang bisa saya bantu?"
+    elif intent == "identitas":
+        return "Saya adalah chatbot yang dibuat untuk membantu Anda."
+    elif intent == "kemampuan":
+        return "Saya bisa memproses teks dan memberikan respons berdasarkan niat."
+    elif intent == "umur":
+        return "Saya tidak memiliki umur, saya hanyalah kode."
+    else:
+        return "Maaf, saya tidak mengerti."
+
 app = Flask(__name__)
 
 @app.route('/')
-def index():
-    return "ChatBot Running!"
+def main():
+    return 'CHATBOT Running'
 
 @app.route('/api/chatbot', methods=['POST'])
 def chatBot():
     data = request.json
     message = data.get('message', '')
 
-    if "halo" in message.lower():
-        response = "Halo, apa yang bisa saya bantu?", "1. Mengembalikan pesan", "2. Siapa kamu ?", '''PILIH 1-2'''
-    elif "1" in message:
-        response = f"Pesan kamu: [{message}]"
-    elif "2" in message:
-        response = "saya C-Bot, dibuat oleh albania hazera dan hanya bisa diakses dijaringan lokal."
-    elif "tes" in message.lower():
-        response = "ya ini test"
-    elif adminKey in message:
-        response = "halo albania hazera, senang bertemu denganmu"
-    else: 
-        response = "maaf saya tidak tahu"
-
+    # Menggunakan model untuk memprediksi niat dari pesan pengguna
+    intent = predict_intent(message)
     
-    return jsonify({"response": response})
+    # Mendapatkan respons berdasarkan niat yang diprediksi
+    response_text = get_response(intent)
+    
+    return jsonify({"response": response_text})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=runningONPORT)
+    # Jangan gunakan di produksi
+    app.run(host='0.0.0.0', port=5000)
